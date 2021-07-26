@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Sentry;
 using Speckle.Core.Logging;
 using Speckle.Core.Models;
+using Speckle.Core.Serialisation;
 using Speckle.Core.Transports;
 using Speckle.Newtonsoft.Json;
 
@@ -77,6 +78,7 @@ namespace Speckle.Core.Api
       if (objString != null)
       {
         // Shoot out the total children count
+        objString = ObjectStringFormatUtilities.ParseFormatAndReturnObjectString(objString);
         var partial = JsonConvert.DeserializeObject<Placeholder>(objString);
         if (partial.__closure != null)
           onTotalChildrenCountKnown?.Invoke(partial.__closure.Count);
@@ -101,6 +103,7 @@ namespace Speckle.Core.Api
 
       Log.AddBreadcrumb("RemoteHit");
       objString = await remoteTransport.CopyObjectAndChildren(objectId, localTransport, onTotalChildrenCountKnown);
+      objString = ObjectStringFormatUtilities.ParseFormatAndReturnObjectString(objString);
 
       // Wait for the local transport to finish "writing" - in this case, it signifies that the remote transport has done pushing copying objects into it. (TODO: I can see some scenarios where latency can screw things up, and we should rather wait on the remote transport).
       await localTransport.WriteComplete();

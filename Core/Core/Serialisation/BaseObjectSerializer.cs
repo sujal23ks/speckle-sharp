@@ -166,7 +166,7 @@ namespace Speckle.Core.Serialisation
 
         if (ReadTransport != null)
         {
-          str = ReadTransport.GetObject(id);
+          str = ObjectStringFormatUtilities.ParseFormatAndReturnObjectString(ReadTransport.GetObject(id));
         }
         else
         {

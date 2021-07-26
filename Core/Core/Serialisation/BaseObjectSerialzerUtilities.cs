@@ -345,4 +345,30 @@ namespace Speckle.Core.Serialisation
       site.Target(site, target, value);
     }
   }
+
+  public static class ObjectStringFormatUtilities
+  {
+    /// <summary>
+    /// Helper method for parsing speckle formatted strings of objects. Given a serialised string coming from a transport, it ensures that only the part containg actual object data is returned, discarding any metadata added by the serialisation routine.
+    /// <para>Please note, objects that are simply serialised without transporation do not need to be passed through this method.</para>
+    /// </summary>
+    /// <param name="input">The string representation of a speckle object <b>coming directly from a transport</b>.</param>
+    /// <returns>The part of the string containing only the actual object data.</returns>
+    public static string ParseFormatAndReturnObjectString(string input)
+    {
+      if (input[0] != 'v')
+      {
+        return input;
+      }
+      else
+      {
+        var pcs = input.Split('\t');
+        if (pcs[0] != "v2") throw new Logging.SpeckleException("Unknown object format.");
+        if (pcs.Length != 3) throw new Logging.SpeckleException("Unknown object format: mismatched length. Please update!");
+        return pcs[2];
+      }
+    }
+
+  }
+
 }
