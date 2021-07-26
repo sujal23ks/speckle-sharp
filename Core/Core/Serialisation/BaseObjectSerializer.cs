@@ -89,7 +89,6 @@ namespace Speckle.Core.Serialisation
 
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
     {
-
       if (CancellationToken.IsCancellationRequested)
       {
         return null; // Check for cancellation
@@ -455,23 +454,26 @@ namespace Speckle.Core.Serialisation
           serializer.Context = new StreamingContext();
         }
 
+        JToken closure = null;
         // Check if we actually have any transports present that would warrant a 
         if ((WriteTransports != null && WriteTransports.Count != 0) && RefMinDepthTracker.ContainsKey(Lineage[Lineage.Count - 1]))
         {
-          jo.Add("__closure", JToken.FromObject(RefMinDepthTracker[Lineage[Lineage.Count - 1]]));
+          closure = JToken.FromObject(RefMinDepthTracker[Lineage[Lineage.Count - 1]]);
+          jo.Add("__closure", closure);
         }
 
-        var hash = Models.Utilities.hashString(jo.ToString());
+        var id = Models.Utilities.hashString(jo.ToString());
         if (!jo.ContainsKey("id"))
         {
-          jo.Add("id", JToken.FromObject(hash));
+          jo.Add("id", JToken.FromObject(id));
         }
         jo.WriteTo(writer);
 
         if ((DetachLineage.Count == 0 || DetachLineage[DetachLineage.Count - 1]) && WriteTransports != null && WriteTransports.Count != 0)
         {
-          var objString = jo.ToString(writer.Formatting);
-          var objId = jo["id"].Value<string>();
+          var metadata = new { id, closure, type = obj.speckle_type};
+          var metadataString = JToken.FromObject(metadata).ToString(writer.Formatting);
+          var str = string.Join("\t", "v2", metadataString, jo.ToString(writer.Formatting));
 
           OnProgressAction?.Invoke("S", 1);
 
@@ -482,7 +484,7 @@ namespace Speckle.Core.Serialisation
               continue; // Check for cancellation
             }
 
-            transport.SaveObject(objId, objString);
+            transport.SaveObject(id, str);
           }
         }
 
