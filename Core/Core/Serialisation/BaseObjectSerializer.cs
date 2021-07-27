@@ -473,7 +473,7 @@ namespace Speckle.Core.Serialisation
         {
           var metadata = new { id, closure, type = obj.speckle_type};
           var metadataString = JToken.FromObject(metadata).ToString(writer.Formatting);
-          var str = string.Join("\t", "v2", metadataString, jo.ToString(writer.Formatting));
+          var str = string.Join("\t", "v1", metadataString, jo.ToString(writer.Formatting));
 
           OnProgressAction?.Invoke("S", 1);
 
