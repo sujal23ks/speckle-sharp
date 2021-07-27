@@ -246,17 +246,17 @@ namespace Speckle.Core.Transports
           continue;
         }
 
-        var _ctBuilder = new StringBuilder("[");
+        var _ctBuilder = new StringBuilder();
         for (int i = 0; i < batch.Count; i++)
         {
           if (i > 0)
           {
-            _ctBuilder.Append(",");
+            _ctBuilder.Append("\n");
           }
           _ctBuilder.Append(batch[i].Item2);
           TotalSentBytes += batch[i].Item3;
         }
-        _ctBuilder.Append("]");
+        //_ctBuilder.Append("]");
         String _ct = _ctBuilder.ToString();
 
         if (CompressPayloads)
