@@ -18,17 +18,11 @@ namespace Onboarding
   /// <summary>
   /// Interaction logic for Slide1.xaml
   /// </summary>
-  public partial class Slide1 : UserControl
+  public partial class Slide3 : UserControl
   {
-    public Slide1()
+    public Slide3()
     {
       InitializeComponent();
-    }
-
-
-    private void Skip_OnClick(object sender, RoutedEventArgs e)
-    {
-      Window.GetWindow(this).Close();
     }
   }
 }

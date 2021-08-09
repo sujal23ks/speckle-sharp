@@ -9,12 +9,13 @@
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.LightBlue.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
-      <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="{StaticResource Primary400}" />
-      <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="{StaticResource Primary400Foreground}" />
+      <SolidColorBrush x:Key="PrimaryHueLightBrush" Color="#8A81F7" />
+      <SolidColorBrush x:Key="PrimaryHueLightForegroundBrush" Color="#FDFDFD" />
       <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#047EFB" />
       <SolidColorBrush x:Key="PrimaryHueMidForegroundBrush" Color="#FDFDFD" />
       <SolidColorBrush x:Key="PrimaryHueDarkBrush" Color="#313BCF" />
       <SolidColorBrush x:Key="PrimaryHueDarkForegroundBrush" Color="{StaticResource Primary600Foreground}" />
+
     </ResourceDictionary>
 
     <!--  secondary colour  -->
@@ -28,7 +29,10 @@
       <SolidColorBrush x:Key="SecondaryHueMidForegroundBrush" Color="#FDFDFD" />
     </ResourceDictionary>
 
-
+    <!--  font  -->
+    <ResourceDictionary>
+      <FontFamily x:Key="sg">/Fonts/#Space Grotesk</FontFamily>
+    </ResourceDictionary>
 
 
     <!--  more theme resources  -->

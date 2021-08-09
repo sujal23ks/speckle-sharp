@@ -7,8 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\revit-launch.gif" />
+    <None Remove="Fonts\SpaceGrotesk.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\revit-launch.gif" />
+    <Resource Include="Fonts\SpaceGrotesk.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Emoji.Wpf" Version="0.3.3" />
     <PackageReference Include="MaterialDesignColors" Version="2.0.1" />
     <PackageReference Include="MaterialDesignThemes" Version="4.1.0" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,12 +28,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Slide3.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Slide2.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="Slide3.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Slide2.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>

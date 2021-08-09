@@ -12,23 +12,22 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Speckle.Core.Credentials;
 
 namespace Onboarding
 {
   /// <summary>
   /// Interaction logic for Slide1.xaml
   /// </summary>
-  public partial class Slide1 : UserControl
+  public partial class Slide0 : UserControl
   {
-    public Slide1()
+    public Slide0()
     {
       InitializeComponent();
-    }
-
-
-    private void Skip_OnClick(object sender, RoutedEventArgs e)
-    {
-      Window.GetWindow(this).Close();
+      var accounts = AccountManager.GetAccounts();
     }
   }
+
+
+
 }
