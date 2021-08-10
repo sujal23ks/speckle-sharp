@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Speckle.Core.Api;
+using Speckle.Core.Credentials;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +15,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Onboarding
 {
@@ -23,12 +26,45 @@ namespace Onboarding
     public Slide1()
     {
       InitializeComponent();
+      var accounts = AccountManager.GetAccounts();
+
+      
+      var message = "";
+
+      if (accounts.Any())
+      {
+        if (accounts.Count() == 1)
+          message = "Great! You have an account already. You're all set up!";
+        else
+          message = $"Wow! You have {accounts.Count()} accounts already. You're all set up!";
+
+
+       // var defaultAccount = AccountManager.GetDefaultAccount();
+      
+        //var client = new Client();
+        //var user = client.UserGet().Result;
+        //user.streams.totalCount
+
+      }
+      else
+        message = $"Oh-oh! You don't have any accounts yet! Please add or create one from SpeckleManager:";
+
+
+      this.DataContext = new { Message = message, Accounts = accounts, CanContinue = accounts.Any(), ShowManagerButton = !accounts.Any() };
     }
 
-
-    private void Skip_OnClick(object sender, RoutedEventArgs e)
+    private void OpenManager_Click(object sender, RoutedEventArgs e)
     {
-      Window.GetWindow(this).Close();
+      var manager = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "speckle-manager", "SpeckleManager.exe");
+
+      if (File.Exists(manager))
+      {
+        Process.Start(manager);
+      }
+      else
+        Process.Start("https://speckle-releases.ams3.digitaloceanspaces.com/manager/SpeckleManager%20Setup.exe");
+
+
     }
   }
 }

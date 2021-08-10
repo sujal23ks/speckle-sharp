@@ -32,7 +32,7 @@ namespace Onboarding
     }
     public List<Wizard> Wizards = new List<Wizard> { 
       new Wizard { Connector = "Revit", 
-        Slide2 = "Launch the connector from the Addins ribbon panel.", Slide2Img="/Assets/revit-launch.gif",
+        Slide2 = "It's time to launch the connector! Click on it from the Addins tab.", Slide2Img="/Assets/revit-launch.gif",
         Slide3="Create a new stream, select your elements and send!", Slide3Img="/Assets/revit-launch.gif"}, 
       new Wizard { Connector = "Rhino", Slide2 = "Bla bla bla" } };
   }

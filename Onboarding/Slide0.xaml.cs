@@ -24,7 +24,12 @@ namespace Onboarding
     public Slide0()
     {
       InitializeComponent();
-      var accounts = AccountManager.GetAccounts();
+      
+    }
+
+    private void Skip_OnClick(object sender, RoutedEventArgs e)
+    {
+      Window.GetWindow(this).Close();
     }
   }
 

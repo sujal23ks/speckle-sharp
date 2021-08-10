@@ -25,13 +25,11 @@
         <emoji:TextBlock FontSize="20" Text="👋" />
         Hello,<LineBreak />
         Welcome to Speckle!<LineBreak /><LineBreak />
-        Get started in no time with our<LineBreak />
+        This quick wizard will <LineBreak />get you started in no time with our<LineBreak />
         <Run FontWeight="Bold" Text="{Binding Connector}" /><Run FontWeight="Bold" Text=" Connector!" /><LineBreak /><LineBreak />
-        Just follow this short wizard.<LineBreak />
         <emoji:TextBlock FontSize="20" Text="👇" />
       </TextBlock>
 
-      <!--  you can easily use the move next, previous, first and last commands  -->
       <Button
         Margin="64"
         Command="{x:Static materialDesign:Transitioner.MoveNextCommand}"

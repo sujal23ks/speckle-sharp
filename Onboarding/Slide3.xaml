@@ -28,7 +28,7 @@
         VerticalAlignment="Center"
         FontFamily="{StaticResource sg}"
         Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-        Text="Sending"
+        Text="Let's send something:"
         TextAlignment="Center"
         TextWrapping="Wrap" />
       <Image Grid.Row="1" gif:ImageBehavior.AnimatedSource="{Binding Slide3Img}" />

@@ -9,42 +9,87 @@
   d:DesignHeight="300"
   d:DesignWidth="300"
   mc:Ignorable="d">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVis" />
+  </UserControl.Resources>
   <materialDesign:ColorZone
     HorizontalAlignment="Stretch"
     VerticalAlignment="Stretch"
-    Mode="Light">
-    <StackPanel Margin="10" VerticalAlignment="Center">
+    Mode="PrimaryLight">
+    <Grid HorizontalAlignment="Center">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="auto" />
+      </Grid.RowDefinitions>
+      <StackPanel Margin="10" VerticalAlignment="Center">
 
-      <TextBlock
-        Margin="16,0,0,0"
+        <TextBlock
+        Margin="16"
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
         FontFamily="{StaticResource sg}"
-        FontSize="20"
+          Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+     
+        TextWrapping="WrapWithOverflow"
         TextAlignment="Center">
-        <emoji:TextBlock FontSize="20" Text="👋" />
-        Hello,<LineBreak />
-        Welcome to Speckle!<LineBreak /><LineBreak />
-        Get started in no time with our<LineBreak />
-        <Run FontWeight="Bold" Text="{Binding Connector}" /><Run FontWeight="Bold" Text=" Connector!" /><LineBreak /><LineBreak />
-        Just follow this short wizard.<LineBreak />
-        <emoji:TextBlock FontSize="20" Text="👇" />
-      </TextBlock>
+        <emoji:TextBlock FontSize="20" Text="☝" />
+        First things first,<LineBreak />
+        let's check your accounts...</TextBlock>
+        <TextBlock
+        Margin="16"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        FontFamily="{StaticResource sg}"
+ 
+        FontSize="20"
+        TextWrapping="WrapWithOverflow"
+        TextAlignment="Center">
+        <Run Text="{Binding Message, Mode=OneWay}" />
+        </TextBlock>
 
-      <!--  you can easily use the move next, previous, first and last commands  -->
-      <Button
-        Margin="64"
-        Command="{x:Static materialDesign:Transitioner.MoveNextCommand}"
-        Style="{DynamicResource MaterialDesignFloatingActionButton}">
-        <emoji:TextBlock FontSize="20" Text="🚀" />
-      </Button>
-      <Button
-        Width="260"
-        Click="Skip_OnClick"
-        Content="Not Interested? Skip this FOREVER."
-        Style="{StaticResource MaterialDesignFlatButton}"
-        ToolTip="This wizard will not show up again in any connector." />
-      <Label Cursor="Hand" />
-    </StackPanel>
+        <ListView Margin="0,30" Name="lvDataBinding" ItemsSource="{Binding Accounts}" Foreground="White" HorizontalAlignment="Center">
+          <ListView.ItemTemplate>
+            <DataTemplate>
+              <StackPanel HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                  <TextBlock Text="{Binding userInfo.name}" FontWeight="Bold" />
+                  <TextBlock Text=" | "/>
+                  <TextBlock Text="{Binding userInfo.email}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                  <TextBlock Text="{Binding serverInfo.name}" FontWeight="Bold" />
+                 
+                  <TextBlock Text=" | "/>
+                  <TextBlock Text="{Binding serverInfo.url}" />
+                </StackPanel>
+               
+
+              </StackPanel>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+        <Button Visibility="{Binding Path=ShowManagerButton, Converter={StaticResource BoolToVis}}" Style="{StaticResource MaterialDesignRaisedAccentButton}" Margin="16,30,16,0" Click="OpenManager_Click">Launch Speckle Manager</Button>
+      </StackPanel>
+
+      <StackPanel
+        Grid.Row="2"
+        HorizontalAlignment="Center"
+        Orientation="Horizontal">
+        <Button
+          Margin="20"
+          Command="{x:Static materialDesign:Transitioner.MovePreviousCommand}"
+          Style="{DynamicResource MaterialDesignFloatingActionDarkButton}">
+          <materialDesign:PackIcon Kind="StepBackward" />
+        </Button>
+        <Button
+          Visibility="{Binding Path=CanContinue, Converter={StaticResource BoolToVis}}" 
+          Margin="20"
+          Command="{x:Static materialDesign:Transitioner.MoveNextCommand}"
+          Style="{DynamicResource MaterialDesignFloatingActionAccentButton}">
+          <materialDesign:PackIcon Kind="StepForward" />
+        </Button>
+      </StackPanel>
+    </Grid>
   </materialDesign:ColorZone>
 </UserControl>
