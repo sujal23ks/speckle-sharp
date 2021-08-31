@@ -207,7 +207,6 @@ jobs: # Each project will have individual jobs for each specific task it has to 
   build-connector-mac:
     docker:
       - image: mono:latest
-      - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
     parameters:
       slnname:
         type: string
@@ -237,7 +236,9 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           name: Install dotnet CLI
           command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
       - run:
-          command: cd .. & ls
+          command: cd ../ & ls
+      - run:
+          command: ls /root/
       - run:
           name: Build Mac installer
           command: /root/.dotnet/dotnet publish ../speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
