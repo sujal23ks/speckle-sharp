@@ -237,10 +237,10 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           name: Install dotnet CLI
           command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
       - run:
-          command: ls
+          command: cd .. & ls
       - run:
           name: Build Mac installer
-          command: /root/.dotnet/dotnet publish ./speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
+          command: /root/.dotnet/dotnet publish ../speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
 
   get-ci-tools: # Clones our ci tools and persists them to the workspace
     docker:
