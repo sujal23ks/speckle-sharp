@@ -205,7 +205,6 @@ jobs: # Each project will have individual jobs for each specific task it has to 
   build-connector-mac:
     docker:
       - image: mono:latest
-      - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
     parameters:
       slnname:
         type: string
@@ -219,8 +218,8 @@ jobs: # Each project will have individual jobs for each specific task it has to 
         default: false
     steps:
       - run:
-          name: List SDKs
-          command: dotnet --list-sdks
+          name: Install dotnet
+          command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
       - checkout
       - run: 
           name: Restore << parameters.slnname >>
