@@ -205,7 +205,6 @@ jobs: # Each project will have individual jobs for each specific task it has to 
   build-connector-mac:
     docker:
       - image: mono:latest
-      - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
     parameters:
       slnname:
         type: string
@@ -295,8 +294,8 @@ workflows:
   # Grasshopper connector - Build/Test
   connector_grasshopper:
     when: << pipeline.parameters.run_connector_gh >>
+
     jobs:
-      - get-ci-tools
       - build-connector:
           name: build-connector-grasshopper
           slnname: ConnectorGrasshopper
@@ -304,7 +303,9 @@ workflows:
       - build-connector-mac:
           name: build-connector-grasshopper-mac
           slnname: ConnectorGrasshopper
-          dllname: SpeckleConnectorGrasshopper.gha 
+          dllname: SpeckleConnectorGrasshopper.gha
+          requires:
+            - get-ci-tools
   
   # Rhino connector - Build/Test
   connector_rhino:
