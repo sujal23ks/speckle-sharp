@@ -9,6 +9,8 @@ orbs:
   win: circleci/windows@2.4.0
   # Upload artifacts to s3
   aws-s3: circleci/aws-s3@2.0.0
+  # Allow for waiting until docker images are ready
+  wait-for: cobli/wait-for@0.0.2
 
 # adapted from https://circleci.com/developer/orbs/orb/storytel/nugetpublish#commands-packandpublish
 commands:
@@ -205,6 +207,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
   build-connector-mac:
     docker:
       - image: mono:latest
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
     parameters:
       slnname:
         type: string
@@ -234,8 +237,10 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           name: Install dotnet CLI
           command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
       - run:
+          command: ls
+      - run:
           name: Build Mac installer
-          command: /root/.dotnet/dotnet publish speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
+          command: /root/.dotnet/dotnet publish ./speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
 
   get-ci-tools: # Clones our ci tools and persists them to the workspace
     docker:
