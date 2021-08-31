@@ -238,7 +238,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           command: cd ../ & ls
       - run:
-          command: ls /root/
+          command: ls /root/project
       - run:
           name: Build Mac installer
           command: /root/.dotnet/dotnet publish ../speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
