@@ -297,8 +297,8 @@ workflows:
   # Grasshopper connector - Build/Test
   connector_grasshopper:
     when: << pipeline.parameters.run_connector_gh >>
-
     jobs:
+      - get-ci-tools
       - build-connector:
           name: build-connector-grasshopper
           slnname: ConnectorGrasshopper
