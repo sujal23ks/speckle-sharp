@@ -204,7 +204,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
 
   build-connector-mac:
     docker:
-      - image: aparker/circleci-dotnet-mono:latest
+      - image: mono:latest
       - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
     parameters:
       slnname:
@@ -218,6 +218,9 @@ jobs: # Each project will have individual jobs for each specific task it has to 
         type: boolean
         default: false
     steps:
+      - run:
+          name: List SDKs
+          command: dotnet --list-sdks
       - checkout
       - run: 
           name: Restore << parameters.slnname >>
@@ -301,7 +304,7 @@ workflows:
           slnname: ConnectorGrasshopper
           dllname: SpeckleConnectorGrasshopper.gha
       - build-connector-mac:
-          name: build-connector-grasshopper
+          name: build-connector-grasshopper-mac
           slnname: ConnectorGrasshopper
           dllname: SpeckleConnectorGrasshopper.gha 
   
