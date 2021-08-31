@@ -234,12 +234,12 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Zip Kit files
           command: |
-            cd /root/project/Objects/Converters/ConverterRhinoGh/bin/Debug/netstandard2.0
+            cd ./Objects/Converters/ConverterRhinoGh/bin/Debug/netstandard2.0
             zip -r Objects.zip Objects.dll Objects.Converter.Rhino.dll
       - run:
           name: Zip Connector files
           command: |
-            cd /root/project/ConnectorGrasshopper/ConnectorGrasshopper/bin/
+            cd ./ConnectorGrasshopper/ConnectorGrasshopper/bin/
             zip -r SpeckleGH.zip ./
       - run:
           name: Copy files to installer
