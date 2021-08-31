@@ -202,6 +202,41 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           paths:
             - speckle-sharp-ci-tools/Installers
 
+  build-connector-mac:
+    docker:
+      - image: aparker/circleci-dotnet-mono:latest
+      - image: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
+    parameters:
+      slnname:
+        type: string
+      dllname:
+        type: string
+      slug:
+        type: string
+        default: ''
+      installer:
+        type: boolean
+        default: false
+    steps:
+      - checkout
+      - get-ci-tools
+      - run: 
+          name: Restore << parameters.slnname >>
+          command: nuget restore << parameters.slnname >>/<< parameters.slnname >>.sln
+      - run:
+          name: Build << parameters.slnname >>
+          command: msbuild << parameters.slnname >>/<< parameters.slnname >>.sln /p:Configuration=Release /p:WarningLevel=0 /p:IsDesktopBuild=false
+      - run:
+          name: Copy kit to installer
+          command: echo "Copy installer"
+      - run:
+          name: Copy Connector to installer
+          command: echo "Copy connector"
+      - run:
+          name: Build Mac installer
+          command: dotnet publish speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
+
+
   get-ci-tools: # Clones our ci tools and persists them to the workspace
     docker:
       - image: cimg/base:2021.01
@@ -263,6 +298,10 @@ workflows:
     when: << pipeline.parameters.run_connector_gh >>
     jobs:
       - build-connector:
+          name: build-connector-grasshopper
+          slnname: ConnectorGrasshopper
+          dllname: SpeckleConnectorGrasshopper.gha
+      - build-connector-mac:
           name: build-connector-grasshopper
           slnname: ConnectorGrasshopper
           dllname: SpeckleConnectorGrasshopper.gha 
