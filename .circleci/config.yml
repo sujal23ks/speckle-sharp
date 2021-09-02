@@ -232,12 +232,9 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Build << parameters.slnname >>
           command: msbuild << parameters.slnname >>/<< parameters.slnname >>.sln /p:Configuration=Release /p:WarningLevel=0 /p:IsDesktopBuild=false
-
-      # Testing folder paths
       - run:
-          name: Path print
-          command: 
-            ls Objects/Converters/ConverterRhinoGh/bin/
+          name: Deploy?
+          command: echo "Should we deploy this?"
       # Compress build files
       - run:
           name: Zip Kit files
@@ -255,6 +252,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Copy files to installer
           command: |
+            mkdir speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles/
             cp Objects/Converters/ConverterRhinoGh/bin/Release/netstandard2.0/Objects.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
             cp << parameters.slnname >>/<< parameters.slnname >>/bin/SpeckleGH.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
       - run:
