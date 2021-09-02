@@ -225,7 +225,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           command: |
             curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
             apt-get update
-            apt-get install zip
+            apt-get install -y zip
       - run: 
           name: Restore << parameters.slnname >>
           command: nuget restore << parameters.slnname >>/<< parameters.slnname >>.sln
