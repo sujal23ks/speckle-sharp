@@ -229,8 +229,14 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Install dotnet CLI
           command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
-      - attach_workspace:
-          at: ./
+      # Testing folder paths
+      - run:
+          name: Path print
+          command: |
+            ls
+            ls Objects/
+            ls Objects/Converters/ConverterRhinoGh
+      # Compress build files
       - run:
           name: Zip Kit files
           command: |
@@ -239,16 +245,16 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Zip Connector files
           command: |
-            cd ./ConnectorGrasshopper/ConnectorGrasshopper/bin/
-            zip -r SpeckleGH.zip ./
+            cd << parameters.slnname >>/<< parameters.slnname >>/bin/
+            zip -r << parameters.slnname >>.zip ./
+      # Create installer
+      - attach_workspace:
+          at: ./
       - run:
           name: Copy files to installer
           command: |
             cp Objects/Converters/ConverterRhinoGh/bin/Debug/netstandard2.0/Objects.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
-            cp ConnectorGrasshopper/ConnectorGrasshopper/bin/SpeckleGH.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
-      - run:
-          name: Copy Connector to installer
-          command: echo "Copy connector"
+            cp << parameters.slnname >>/<< parameters.slnname >>/bin/SpeckleGH.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
       - run:
           name: Build Mac installer
           command: /root/.dotnet/dotnet publish speckle-sharp-ci-tools/Mac/SpeckleGHInstall/SpeckleGHInstall.sln -r osx-x64 -c Release /property:GenerateFullPaths=true /consoleloggerparameters:NoSummary /p:PublishSingleFile=true /p:PublishTrimmed=true
