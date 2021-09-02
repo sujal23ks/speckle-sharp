@@ -255,7 +255,7 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       - run:
           name: Copy files to installer
           command: |
-            cp Objects/Converters/ConverterRhinoGh/bin/Debug/netstandard2.0/Objects.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
+            cp Objects/Converters/ConverterRhinoGh/bin/Release/netstandard2.0/Objects.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
             cp << parameters.slnname >>/<< parameters.slnname >>/bin/SpeckleGH.zip speckle-sharp-ci-tools/Mac/SpeckleGHInstall/.installationFiles
       - run:
           name: Build Mac installer
