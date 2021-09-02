@@ -220,15 +220,18 @@ jobs: # Each project will have individual jobs for each specific task it has to 
         default: false
     steps:
       - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
+            sudo apt-get install zip
       - run: 
           name: Restore << parameters.slnname >>
           command: nuget restore << parameters.slnname >>/<< parameters.slnname >>.sln
       - run:
           name: Build << parameters.slnname >>
           command: msbuild << parameters.slnname >>/<< parameters.slnname >>.sln /p:Configuration=Release /p:WarningLevel=0 /p:IsDesktopBuild=false
-      - run:
-          name: Install dotnet CLI
-          command: curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
+
       # Testing folder paths
       - run:
           name: Path print
