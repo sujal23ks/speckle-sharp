@@ -232,15 +232,13 @@ jobs: # Each project will have individual jobs for each specific task it has to 
       # Testing folder paths
       - run:
           name: Path print
-          command: |
-            ls
-            ls Objects/
-            ls Objects/Converters/ConverterRhinoGh
+          command: 
+            ls Objects/Converters/ConverterRhinoGh/bin/
       # Compress build files
       - run:
           name: Zip Kit files
           command: |
-            cd ./Objects/Converters/ConverterRhinoGh/bin/Debug/netstandard2.0
+            cd ./Objects/Converters/ConverterRhinoGh/bin/Release/netstandard2.0
             zip -r Objects.zip Objects.dll Objects.Converter.Rhino.dll
       - run:
           name: Zip Connector files
