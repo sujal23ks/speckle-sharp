@@ -224,8 +224,8 @@ jobs: # Each project will have individual jobs for each specific task it has to 
           name: Install Dependencies
           command: |
             curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin
-            apt-get install -y sudo
-            sudo apt-get install zip
+            apt-get update
+            apt-get install zip
       - run: 
           name: Restore << parameters.slnname >>
           command: nuget restore << parameters.slnname >>/<< parameters.slnname >>.sln
