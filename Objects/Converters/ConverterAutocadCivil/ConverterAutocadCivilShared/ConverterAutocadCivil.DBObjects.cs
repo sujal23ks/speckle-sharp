@@ -1213,7 +1213,6 @@ namespace Objects.Converter.AutocadCivil
 
       var instance = new BlockInstance()
       {
-        insertionPoint = PointToSpeckle(reference.Position),
         transform = reference.BlockTransform.ToArray(),
         blockDefinition = definition,
         units = ModelUnits
@@ -1235,14 +1234,15 @@ namespace Objects.Converter.AutocadCivil
       if (definitionId == ObjectId.Null)
         return result;
 
-      // insertion pt
-      Point3d insertionPoint = PointToNative(instance.insertionPoint);
-
       // transform
       double[] transform = instance.transform;
       for (int i = 3; i < 12; i += 4)
         transform[i] = ScaleToNative(transform[i], instance.units);
       Matrix3d convertedTransform = new Matrix3d(transform);
+
+      // calculate insertion pt from base pt and transform
+      var basePoint = PointToNative(instance.blockDefinition.basePoint);
+      Point3d insertionPoint = basePoint.TransformBy(convertedTransform);
 
       // add block reference
       BlockTableRecord modelSpaceRecord = Doc.Database.GetModelSpace();

@@ -65,6 +65,103 @@ namespace Objects.Converter.AutocadCivil
 
       _alignment.units = ModelUnits;
 
+      // add civil3d props if they exist
+      if (alignment.SiteName != null)
+        _alignment["site"] = alignment.SiteName;
+      if (alignment.StyleName != null)
+        _alignment["style"] = alignment.StyleName;
+
+      return _alignment;
+    }
+
+    public CivilDB.Alignment AlignmentToNative(Alignment alignment)
+    {
+      CivilDB.Alignment _alignment = null;
+      var name = alignment.name ?? alignment.applicationId;
+      var layer = Doc.Database.LayerZero;
+
+      BlockTableRecord modelSpaceRecord = Doc.Database.GetModelSpace();
+      var civilDoc = CivilApplication.ActiveDocument;
+      if (civilDoc == null)
+        return null;
+
+      // create polyline for alignment
+      var polyline = CurveToNativeDB(alignment.baseCurve);
+      if (polyline == null)
+        return null;
+      modelSpaceRecord.Append(polyline);
+      var polylineOptions = new CivilDB.PolylineOptions();
+      polylineOptions.AddCurvesBetweenTangents = true;
+      polylineOptions.EraseExistingEntities = true;
+      polylineOptions.PlineId = polyline.ObjectId;
+
+      // get site id, labelset, style, layer ids or defaults
+      var site = ObjectId.Null;
+      var style = civilDoc.Styles.AlignmentStyles.First();
+      var label = civilDoc.Styles.LabelSetStyles.First();
+      using (Transaction tr = Doc.TransactionManager.StartTransaction())
+      {
+        // get site
+        if (alignment["site"] != null)
+        {
+          var _site = alignment["site"] as string;
+          if (_site != string.Empty)
+          {
+            foreach (var docSite in civilDoc.GetSiteIds())
+            {
+              var siteEntity = tr.GetObject(docSite, OpenMode.ForRead) as CivilDB.Site;
+              if (siteEntity.Name.Equals(_site))
+              {
+                site = docSite;
+                break;
+              }
+            }
+          }
+        }
+
+        // get style
+        if (alignment["style"] != null)
+        {
+          var _style = alignment["style"] as string;
+          foreach (var docStyle in civilDoc.Styles.AlignmentStyles)
+          {
+            var styleEntity = tr.GetObject(docStyle, OpenMode.ForRead) as CivilDB.Styles.AlignmentStyle;
+            if (styleEntity.Name.Equals(_style))
+            {
+              style = docStyle;
+              break;
+            }
+          }
+        }
+
+        // get labelset
+        if (alignment["label"] != null)
+        {
+          var _label = alignment["label"] as string;
+          foreach (var docLabelSet in civilDoc.Styles.LabelSetStyles)
+          {
+            var labelEntity = tr.GetObject(docLabelSet, OpenMode.ForRead) as CivilDB.Styles.LabelSetStyle;
+            if (labelEntity.Name.Equals(_label))
+            {
+              label = docLabelSet;
+              break;
+            }
+          }
+        }
+
+        ObjectId alignmentId = CivilDB.Alignment.Create(civilDoc, polylineOptions, name, site, layer, style, label);  );
+        if (alignmentId.IsValid)
+        {
+          _alignment = tr.GetObject(alignmentId, OpenMode.ForRead) as CivilDB.Alignment;
+        }
+        else
+        {
+          polyline.Erase();
+        }
+
+        tr.Commit();
+      }
+
       return _alignment;
     }
 
