@@ -88,9 +88,19 @@ namespace Objects.Converter.RhinoGh
       {
         material = GetMaterial(ro);
         style = GetStyle(ro);
-        
+
         if (ro.Attributes.GetUserString(SpeckleSchemaKey) != null) // schema check - this will change in the near future
-          schema = ConvertToSpeckleBE(ro);
+        {
+            try
+            {
+                schema = ConvertToSpeckleBE(ro);
+            }
+            catch 
+            {
+                schema = ConvertToSpeckleStr(ro);
+            }
+        }
+
 
         if (!(@object is InstanceObject)) // block instance check
           @object = ro.Geometry;
@@ -189,6 +199,9 @@ namespace Objects.Converter.RhinoGh
           break;
         case InstanceObject o:
           @base = BlockInstanceToSpeckle(o);
+          break;
+        case TextEntity o:
+          @base = TextToSpeckle(o);
           break;
         default:
           throw new NotSupportedException();
@@ -298,6 +311,59 @@ namespace Objects.Converter.RhinoGh
       return objects.Select(x => ConvertToSpeckleBE(x)).ToList();
     }
 
+    public Base ConvertToSpeckleStr(object @object)
+    {
+        // get schema if it exists
+        RhinoObject obj = @object as RhinoObject;
+        string schema = GetSchema(obj, out string[] args);
+
+        switch (obj.Geometry)
+        {
+
+                //case RH.Point o:
+                //    switch (schema)
+                //    {
+                //        case "Node":
+                //            return PointToSpeckleNode(o);
+
+                //        default:
+                //            throw new NotSupportedException();
+                //    }
+
+                //case RH.Curve o:
+                //    switch (schema)
+                //    {
+                //        case "Element1D":
+                //            return CurveToSpeckleElement1D(o);
+
+                //        default:
+                //            throw new NotSupportedException();
+                //    }
+
+                //case RH.Mesh o:
+                //    switch (schema)
+                //    {
+                //        case "Element2D":
+                //            return MeshToSpeckleElement2D(o);
+
+                //    case "Element3D":
+                //        return MeshToSpeckleElement3D(o);
+
+                //            default:
+                //            throw new NotSupportedException();
+                //    }
+
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+    public List<Base> ConvertToSpeckleStr(List<object> objects)
+    {
+        return objects.Select(x => ConvertToSpeckleStr(x)).ToList();
+    }
+
+
     public object ConvertToNative(Base @object)
     {
       switch (@object)
@@ -379,6 +445,8 @@ namespace Objects.Converter.RhinoGh
         case BlockInstance o:
           return BlockInstanceToNative(o);
 
+        case Text o:
+          return TextToNative(o);
 
         default:
           throw new NotSupportedException();
@@ -431,6 +499,7 @@ case RH.SubD _:
         case ViewInfo _:
         case InstanceDefinition _:
         case InstanceObject _:
+        case TextEntity _:
           return true;
 
         default:
@@ -470,6 +539,7 @@ case RH.SubD _:
         case BlockDefinition _:
         case BlockInstance _:
         case Alignment _:
+        case Text _:
           return true;
         
         default:
