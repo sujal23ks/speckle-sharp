@@ -1213,6 +1213,7 @@ namespace Objects.Converter.AutocadCivil
 
       var instance = new BlockInstance()
       {
+        insertionPoint = PointToSpeckle(reference.Position),
         transform = reference.BlockTransform.ToArray(),
         blockDefinition = definition,
         units = ModelUnits

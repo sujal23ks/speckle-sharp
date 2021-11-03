@@ -195,7 +195,7 @@ public static string AutocadAppName = Applications.Autocad2022;
 
         // TODO: add Civil3D directive to convert to alignment instead of curve
         case Alignment o:
-          return CurveToNativeDB(o.baseCurve);
+          return AlignmentToNative(o.baseCurve);
 
         case ModelCurve o:
           return CurveToNativeDB(o.baseCurve);
