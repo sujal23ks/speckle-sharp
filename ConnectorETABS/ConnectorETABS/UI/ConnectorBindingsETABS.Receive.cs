@@ -55,44 +55,44 @@ namespace Speckle.ConnectorETABS.UI
 
             Exceptions.Clear();
 
-            string referencedObject = state.ReferencedObject;
-
-            var commitId = state.CommitId;
-            var commitMsg = state.CommitMessage;
-            if (commitId == "latest")
+            Commit commit = null;
+            if (state.CommitId == "latest")
             {
-                var res = await state.Client.BranchGet(progress.CancellationTokenSource.Token, state.StreamId, state.BranchName, 1);
-                var commit = res.commits.items.FirstOrDefault();
-                referencedObject = res.commits.items.FirstOrDefault().referencedObject;
-                commitId = commit.id;
-                commitMsg = commit.message;
+              var res = await state.Client.BranchGet(progress.CancellationTokenSource.Token, state.StreamId, state.BranchName, 1);
+              commit = res.commits.items.FirstOrDefault();
             }
+            else
+            {
+              commit = await state.Client.CommitGet(progress.CancellationTokenSource.Token, state.StreamId, state.CommitId);
+            }
+            string referencedObject = commit.referencedObject;
 
-            
-
-
-            var commitObject = await Operations.Receive(
+      var commitObject = await Operations.Receive(
                 referencedObject,
                 progress.CancellationTokenSource.Token,
                 transport,
                 onProgressAction: dict => progress.Update(dict),
                 onErrorAction: (Action<string, Exception>)((s, e) =>
                 {
-                    this.Exceptions.Add(e);
-                          //state.Errors.Add(e);
-                          progress.CancellationTokenSource.Cancel();
+                    progress.Report.LogOperationError(e);
+                    progress.CancellationTokenSource.Cancel();
                 }),
                 //onTotalChildrenCountKnown: count => Execute.PostToUIThread(() => state.Progress.Maximum = count),
                 disposeTransports: true
                 );
 
+            if (progress.Report.OperationErrorsCount != 0)
+            {
+                return state;
+            }
+
             try
             {
                 await state.Client.CommitReceived(new CommitReceivedInput
                 {
-                    streamId = stream.id,
-                    commitId = commitId,
-                    message = commitMsg,
+                    streamId = stream?.id,
+                    commitId = commit?.id,
+                    message = commit?.message,
                     sourceApplication = ConnectorETABSUtils.ETABSAppName
                 });
             }
@@ -101,18 +101,9 @@ namespace Speckle.ConnectorETABS.UI
                 // Do nothing!
             }
 
-            //var commitObject = await Operations.Receive(
-            //  referencedObject,
-            //  state.CancellationTokenSource.Token,
-            //  transport,
-            //  onProgressAction: d => UpdateProgress(d, state.Progress),
-            //  onTotalChildrenCountKnown: num => Execute.PostToUIThread(() => state.Progress.Maximum = num),
-            //  onErrorAction: (message, exception) => { Exceptions.Add(exception); }
-            //  );
 
-            if (Exceptions.Count != 0)
+            if (progress.Report.OperationErrorsCount != 0)
             {
-                //RaiseNotification($"Encountered some errors: {Exceptions.Last().Message}");
                 return state;
             }
 
@@ -131,12 +122,14 @@ namespace Speckle.ConnectorETABS.UI
                 progress.Update(conversionProgressDict);
             };
 
+
             var commitObjs = FlattenCommitObject(commitObject, converter);
             foreach (var commitObj in commitObjs)
             {
                 BakeObject(commitObj, state, converter);
                 updateProgressAction?.Invoke();
             }
+
 
 
             try
@@ -146,12 +139,12 @@ namespace Speckle.ConnectorETABS.UI
             }
             catch (Exception e)
             {
-                Exceptions.Add(e);
+                progress.Report.LogOperationError(e);
                 WriteStateToFile();
                 //state.Errors.Add(e);
                 //Globals.Notify($"Receiving done, but failed to update stream from server.\n{e.Message}");
             }
-
+            progress.Report.Merge(converter.Report);
             return state;
         }
 
@@ -175,9 +168,9 @@ namespace Speckle.ConnectorETABS.UI
             }
             catch (Exception e)
             {
-                Exceptions.Add(e);
+                var exception = new Exception($"Failed to convert object {obj.id} of type {obj.speckle_type}\n with error\n{e}");
+                converter.Report.LogOperationError(exception);
                 return;
-                //state.Errors.Add(new Exception($"Failed to convert object {obj.id} of type {obj.speckle_type}\n with error\n{e}"));
             }
         }
 
