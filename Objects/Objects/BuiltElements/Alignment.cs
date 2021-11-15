@@ -9,6 +9,8 @@ namespace Objects.BuiltElements
 {
   public class Alignment : Base
   {
+    public List<ICurve> entities { get; set; }
+
     public ICurve baseCurve { get; set; }
 
     public string name { get; set; }

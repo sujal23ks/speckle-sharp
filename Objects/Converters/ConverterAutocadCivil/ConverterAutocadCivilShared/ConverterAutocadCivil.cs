@@ -309,8 +309,7 @@ public static string AutocadAppName = Applications.Autocad2022;
           break;
 
         case Polycurve o:
-          var splineSegments = o.segments.Where(s => s is Curve);
-          if (splineSegments.Count() > 0)
+          if (o.segments.Where(s => s is Curve).Count() > 0)
           {
             acadObj = PolycurveSplineToNativeDB(o);
             Report.Log($"Created Polycurve {o.id} as Spline");
@@ -367,9 +366,15 @@ public static string AutocadAppName = Applications.Autocad2022;
           break;
 
         // TODO: add Civil3D directive to convert to alignment instead of curve
+
         case Alignment o:
-          acadObj = AlignmentToNative(o.baseCurve);
+#if (CIVIL2021 || CIVIL2022)
+          acadObj = AlignmentToNative(o);
           Report.Log($"Created Alignment {o.id}");
+          break;
+#endif
+          acadObj = CurveToNativeDB(o.baseCurve);
+          Report.Log($"Created Alignment {o.id} as Curve");
           break;
 
         case ModelCurve o:

@@ -509,6 +509,11 @@ namespace Objects.Converter.RhinoGh
           Report.Log($"Created Ellipse {o.id}");
           break;
 
+        case Spiral o:
+          rhinoObj = SpiralToNative(o);
+          Report.Log($"Created Spiral {o.id} as Curve");
+          break;
+
         case Polyline o:
           rhinoObj = PolylineToNative(o);
           Report.Log($"Created Polyline {o.id}");
@@ -668,6 +673,7 @@ case RH.SubD _:
         case Circle _:
         case Arc _:
         case Ellipse _:
+        case Spiral _:
         case Polyline _:
         case Polycurve _:
         case Curve _:
