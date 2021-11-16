@@ -1,4 +1,4 @@
-﻿//#if (CIVIL2021 || CIVIL2022)
+﻿#if (CIVIL2021 || CIVIL2022)
 using System.Collections.Generic;
 using System.Linq;
 
@@ -203,7 +203,7 @@ namespace Objects.Converter.AutocadCivil
 
       // get display poly
       var poly = alignment.Spline.ToPolyline(false, true);
-      _alignment.displayValue = SplineToSpeckle(poly, ModelUnits);
+      _alignment.displayValue = CurveToSpeckle(poly) as Polyline;
 
       _alignment.entities = curves;
       if (alignment.DisplayName != null)
@@ -239,7 +239,7 @@ namespace Objects.Converter.AutocadCivil
     private Autodesk.AutoCAD.DatabaseServices.Curve CreatePolylineEntity(ICurve curve, out CivilDB.PolylineOptions options)
     {
       BlockTableRecord modelSpaceRecord = Doc.Database.GetModelSpace();
-      options = null;
+      options = new CivilDB.PolylineOptions();
 
       // create polyline options for alignment
       var polyline = CurveToNativeDB(curve);
@@ -248,11 +248,9 @@ namespace Objects.Converter.AutocadCivil
       var id = modelSpaceRecord.Append(polyline);
       if (id == ObjectId.Null)
         return null;
-      var polylineOptions = new CivilDB.PolylineOptions();
-      polylineOptions.AddCurvesBetweenTangents = true;
-      polylineOptions.EraseExistingEntities = true;
-      polylineOptions.PlineId = polyline.ObjectId;
-      options = polylineOptions;
+      options.AddCurvesBetweenTangents = true;
+      options.EraseExistingEntities = true;
+      options.PlineId = polyline.ObjectId;
 
       return polyline;
     }
@@ -269,7 +267,7 @@ namespace Objects.Converter.AutocadCivil
       if (civilDoc == null)
         return null;
 
-      #region properties
+#region properties
       var site = ObjectId.Null;
       var style = civilDoc.Styles.AlignmentStyles.First();
       var label = civilDoc.Styles.LabelSetStyles.AlignmentLabelSetStyles.First();
@@ -321,7 +319,7 @@ namespace Objects.Converter.AutocadCivil
           }
         }
       }
-      #endregion
+#endregion
 
       // create alignment entity curves
       var entities = new CivilDB.AlignmentEntityCollection();
