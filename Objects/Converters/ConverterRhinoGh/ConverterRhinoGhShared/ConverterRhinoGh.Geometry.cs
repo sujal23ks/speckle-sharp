@@ -272,7 +272,6 @@ namespace Objects.Converter.RhinoGh
 
     public ArcCurve ArcToNative(Arc arc)
     {
-      // RH.Arc arc = new RH.Arc(PlaneToNative(a.plane), ScaleToNative((double)a.radius, a.units), (double)a.angleRadians); Not using this constructor due to angle tolerance rounding issues
       var _arc = new RH.Arc(PointToNative(arc.startPoint).Location, PointToNative(arc.midPoint).Location, PointToNative(arc.endPoint).Location);
 
       var arcCurve = new ArcCurve(_arc);
@@ -310,8 +309,10 @@ namespace Objects.Converter.RhinoGh
     }
 
     // Spiral
+    
     public RH.Curve SpiralToNative(Spiral s)
     {
+      /* Using display value polyline for now
       var axisStart = PointToNative(s.plane.origin).Location;
       var axisDir = VectorToNative(s.plane.normal);
       var radiusPoint = PointToNative(s.startPoint).Location;
@@ -324,10 +325,11 @@ namespace Objects.Converter.RhinoGh
         r2 = axisStart.DistanceTo(endPoint);
 
       var nurbs = NurbsCurve.CreateSpiral(axisStart, axisDir, radiusPoint, pitch, s.turns, r1, r2);
-      if (nurbs != null && nurbs.IsValid && nurbs.PointAtEnd.Equals(endPoint))
-        return nurbs;
-      else
-        return PolylineToNative(s.displayValue);
+      if (nurbs != null && nurbs.IsValid)
+        if (nurbs.SetEndPoint(endPoint)) // try to adjust endpoint to match exactly the spiral endpoint
+          return nurbs;
+      */
+      return PolylineToNative(s.displayValue);
     }
 
     // Polyline

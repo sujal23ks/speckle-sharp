@@ -217,20 +217,12 @@ namespace Objects.Converter.AutocadCivil
     }
 
     // Arc
-    public Arc ArcToSpeckle(CircularArc2d arc)
-    {
-      var interval = arc.GetInterval();
-      var _arc = new Arc(PlaneToSpeckle(new AcadGeo.Plane(new Point3d(arc.Center.X, arc.Center.Y, 0), Vector3d.ZAxis)), arc.Radius, arc.StartAngle, arc.EndAngle, Math.Abs(arc.EndAngle - arc.StartAngle), ModelUnits);
-      _arc.startPoint = PointToSpeckle(arc.StartPoint);
-      _arc.endPoint = PointToSpeckle(arc.EndPoint);
-      _arc.midPoint = PointToSpeckle(arc.EvaluatePoint((interval.UpperBound - interval.LowerBound) / 2));
-      _arc.domain = IntervalToSpeckle(arc.GetInterval());
-      _arc.length = arc.GetLength(arc.GetParameterOf(arc.StartPoint), arc.GetParameterOf(arc.EndPoint));
-      return _arc;
-    }
     public Arc ArcToSpeckle(CircularArc3d arc)
     {
       var interval = arc.GetInterval();
+
+      // TODO: arc.GetPlane() doesn't necessarily return plane oriented so that arc is counterclockwise. Need to improve by calculating plane
+
       var _arc = new Arc(PlaneToSpeckle(arc.GetPlane()), arc.Radius, arc.StartAngle, arc.EndAngle, Math.Abs(arc.EndAngle - arc.StartAngle), ModelUnits);
       _arc.startPoint = PointToSpeckle(arc.StartPoint);
       _arc.endPoint = PointToSpeckle(arc.EndPoint);
@@ -251,10 +243,18 @@ namespace Objects.Converter.AutocadCivil
     }
     public Arc ArcToSpeckle(AcadDB.Arc arc)
     {
-      var _arc = new Arc(PlaneToSpeckle(arc.GetPlane()), arc.Radius, arc.StartAngle, arc.EndAngle, arc.TotalAngle, ModelUnits);
+      var midPoint = arc.GetPointAtDist(arc.Length / 2);
+      var v1 = new Vector3d(midPoint.X - arc.StartPoint.X, midPoint.Y - arc.StartPoint.Y, 0);
+      var v2 = new Vector3d(arc.EndPoint.X - arc.StartPoint.X, arc.EndPoint.Y - arc.StartPoint.Y, 0);
+      var cross = v1.CrossProduct(v2);
+      AcadGeo.Plane plane = (cross.DivideBy(cross.Length) == Vector3d.ZAxis) ?
+        new AcadGeo.Plane(arc.Center, Vector3d.ZAxis) :
+        new AcadGeo.Plane(arc.Center, Vector3d.ZAxis.MultiplyBy(-1));
+
+      var _arc = new Arc(PlaneToSpeckle(plane), arc.Radius, arc.StartAngle, arc.EndAngle, arc.TotalAngle, ModelUnits);
       _arc.startPoint = PointToSpeckle(arc.StartPoint);
       _arc.endPoint = PointToSpeckle(arc.EndPoint);
-      _arc.midPoint = PointToSpeckle(arc.GetPointAtDist(arc.Length / 2));
+      _arc.midPoint = PointToSpeckle(midPoint);
       _arc.domain = new Interval(arc.StartParam, arc.EndParam);
       _arc.length = arc.Length;
       _arc.bbox = BoxToSpeckle(arc.GeometricExtents, true);
@@ -562,7 +562,7 @@ namespace Objects.Converter.AutocadCivil
       try
       {
         var poly = spline.ToPolyline(false, true);
-        Polyline displayValue = ConvertToSpeckle(poly) as Polyline;
+        Polyline displayValue = CurveToSpeckle(poly) as Polyline;
         curve.displayValue = displayValue;
       }
       catch { }
@@ -1183,6 +1183,7 @@ namespace Objects.Converter.AutocadCivil
     {
       var _vertices = new List<Point3d>();
       var colors = new List<int>();
+      
       using (Transaction tr = Doc.Database.TransactionManager.StartTransaction())
       {
         foreach (ObjectId id in mesh)
@@ -1201,6 +1202,7 @@ namespace Objects.Converter.AutocadCivil
       return speckleMesh;
     }
     */
+
     // Polyface mesh vertex indexing starts at 1. Subtract 1 from face vertex index when sending to Speckle
     public Mesh MeshToSpeckle(PolyFaceMesh mesh, string units = null)
     {
@@ -1421,6 +1423,5 @@ namespace Objects.Converter.AutocadCivil
 
       return mesh;
     }
-
   }
 }

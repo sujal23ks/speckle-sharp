@@ -16,6 +16,7 @@ using Mesh = Objects.Geometry.Mesh;
 using Plane = Objects.Geometry.Plane;
 using Point = Objects.Geometry.Point;
 using Pointcloud = Objects.Geometry.Pointcloud;
+using Spiral = Objects.Geometry.Spiral;
 using Surface = Objects.Geometry.Surface;
 using Units = Speckle.Core.Kits.Units;
 
@@ -353,6 +354,9 @@ namespace Objects.Converter.Revit
         case Ellipse ellipse:
           curveArray.Append(EllipseToNative(ellipse));
           return curveArray;
+
+        case Spiral spiral:
+          return PolylineToNative(spiral.displayValue);
 
         case Curve nurbs:
           curveArray.Append(CurveToNative(nurbs));

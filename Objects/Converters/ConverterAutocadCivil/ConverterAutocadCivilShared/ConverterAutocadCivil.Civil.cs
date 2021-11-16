@@ -1,4 +1,4 @@
-﻿#if (CIVIL2021 || CIVIL2022)
+﻿//#if (CIVIL2021 || CIVIL2022)
 using System.Collections.Generic;
 using System.Linq;
 
@@ -66,7 +66,28 @@ namespace Objects.Converter.AutocadCivil
       // get midpoint of arc by moving chord mid point the length of the sagitta along mid vector
       var midPoint = chordMid.Add(unitMidVector.MultiplyBy(sagitta));
 
-      var _arc = ArcToSpeckle(new CircularArc2d(arc.StartPoint, midPoint, arc.EndPoint)); 
+      // find arc plane (normal is in clockwise dir)
+      var center3 = new Point3d(arc.CenterPoint.X, arc.CenterPoint.Y, 0);
+      Acad.Plane plane = (arc.Clockwise) ? new Acad.Plane(center3, Vector3d.ZAxis.MultiplyBy(-1)) : new Acad.Plane(center3, Vector3d.ZAxis);
+        
+      // calculate start and end angles
+      var startVector = new Vector3d(arc.StartPoint.X - center3.X, arc.StartPoint.Y - center3.Y, 0);
+      var endVector = new Vector3d(arc.EndPoint.X - center3.X, arc.EndPoint.Y - center3.Y, 0);
+      var startAngle = startVector.AngleOnPlane(plane);
+      var endAngle = endVector.AngleOnPlane(plane);
+
+      // calculate total angle. 
+      // TODO: This needs to be improved with more research into autocad .AngleOnPlane() return values (negative angles, etc).
+      var totalAngle = (arc.Clockwise) ? System.Math.Abs(endAngle - startAngle) : System.Math.Abs(endAngle - startAngle);
+
+      // create arc
+      var _arc = new Arc(PlaneToSpeckle(plane), arc.Radius, startAngle, endAngle, totalAngle, ModelUnits);
+      _arc.startPoint = PointToSpeckle(arc.StartPoint);
+      _arc.endPoint = PointToSpeckle(arc.EndPoint);
+      _arc.midPoint = PointToSpeckle(midPoint);
+      _arc.domain = IntervalToSpeckle(new Acad.Interval(0,1,tolerance));
+      _arc.length = arc.Length;
+
       _arc["startStation"] = arc.StartStation;
       _arc["endStation"] = arc.EndStation;
       return _arc;
@@ -82,11 +103,11 @@ namespace Objects.Converter.AutocadCivil
       _spiral.endAngle = spiral.EndDirection;
       _spiral.length = spiral.Length;
       _spiral.pitch = 0;
-      
+
       // get plane
       var vX = new Vector3d(System.Math.Cos(spiral.StartDirection) + spiral.StartPoint.X, System.Math.Sin(spiral.StartDirection) + spiral.StartPoint.Y, 0);
       var vY = vX.RotateBy(System.Math.PI / 2, Vector3d.ZAxis);
-      var plane = new Acad.Plane(new Point3d(spiral.StartPoint.X, spiral.StartPoint.Y,0), vX, vY);
+      var plane = new Acad.Plane(new Point3d(spiral.RadialPoint.X, spiral.RadialPoint.Y,0), vX, vY);
       _spiral.plane = PlaneToSpeckle(plane);
       
       // get turns
@@ -132,14 +153,16 @@ namespace Objects.Converter.AutocadCivil
       // get the alignment subentity curves
       List<ICurve> curves = new List<ICurve>();
       var stations = new List<double>();
-      foreach (var entity in alignment.Entities)
+      for (int i = 0; i < alignment.Entities.Count; i++)
       {
+        var entity = alignment.Entities.GetEntityByOrder(i);
+
         var polycurve = new Polycurve(units: ModelUnits, applicationId: entity.EntityId.ToString());
         var segments = new List<ICurve>();
         double length = 0;
-        for (int i = 0; i < entity.SubEntityCount; i++)
+        for (int j = 0; j < entity.SubEntityCount; j++)
         {
-          CivilDB.AlignmentSubEntity subEntity = entity[i];
+          CivilDB.AlignmentSubEntity subEntity = entity[j];
           ICurve segment = null;
           switch (subEntity.SubEntityType)
           {
@@ -171,13 +194,18 @@ namespace Objects.Converter.AutocadCivil
         {
           polycurve.segments = segments;
           polycurve.length = length;
+
+          // add additional props like entity type
+          polycurve["alignmentType"] = entity.EntityType.ToString();
           curves.Add(polycurve);
         }
       }
 
+      // get display poly
+      var poly = alignment.Spline.ToPolyline(false, true);
+      _alignment.displayValue = SplineToSpeckle(poly, ModelUnits);
+
       _alignment.entities = curves;
-      // _alignment.baseCurve = CurveToSpeckle(alignment.BaseCurve, ModelUnits);
-      _alignment.baseCurve = null;
       if (alignment.DisplayName != null)
         _alignment.name = alignment.DisplayName;
       if (alignment.StartingStation != null)
@@ -208,8 +236,30 @@ namespace Objects.Converter.AutocadCivil
       return _alignment;
     }
 
+    private Autodesk.AutoCAD.DatabaseServices.Curve CreatePolylineEntity(ICurve curve, out CivilDB.PolylineOptions options)
+    {
+      BlockTableRecord modelSpaceRecord = Doc.Database.GetModelSpace();
+      options = null;
+
+      // create polyline options for alignment
+      var polyline = CurveToNativeDB(curve);
+      if (polyline == null)
+        return null;
+      var id = modelSpaceRecord.Append(polyline);
+      if (id == ObjectId.Null)
+        return null;
+      var polylineOptions = new CivilDB.PolylineOptions();
+      polylineOptions.AddCurvesBetweenTangents = true;
+      polylineOptions.EraseExistingEntities = true;
+      polylineOptions.PlineId = polyline.ObjectId;
+      options = polylineOptions;
+
+      return polyline;
+    }
+
     public CivilDB.Alignment AlignmentToNative(Alignment alignment)
     {
+      /*
       CivilDB.Alignment _alignment = null;
       var name = alignment.name ?? alignment.applicationId;
       var layer = Doc.Database.LayerZero;
@@ -219,84 +269,96 @@ namespace Objects.Converter.AutocadCivil
       if (civilDoc == null)
         return null;
 
-      // create polyline for alignment
-      var polyline = CurveToNativeDB(alignment.baseCurve);
-      if (polyline == null)
-        return null;
-      modelSpaceRecord.Append(polyline);
-      var polylineOptions = new CivilDB.PolylineOptions();
-      polylineOptions.AddCurvesBetweenTangents = true;
-      polylineOptions.EraseExistingEntities = true;
-      polylineOptions.PlineId = polyline.ObjectId;
-
-      // get site id, labelset, style, layer ids or defaults
+      #region properties
       var site = ObjectId.Null;
       var style = civilDoc.Styles.AlignmentStyles.First();
       var label = civilDoc.Styles.LabelSetStyles.AlignmentLabelSetStyles.First();
-      using (Transaction tr = Doc.TransactionManager.StartTransaction())
+
+      // get site
+      if (alignment["site"] != null)
       {
-        // get site
-        if (alignment["site"] != null)
+        var _site = alignment["site"] as string;
+        if (_site != string.Empty)
         {
-          var _site = alignment["site"] as string;
-          if (_site != string.Empty)
+          foreach (ObjectId docSite in civilDoc.GetSiteIds())
           {
-            foreach (ObjectId docSite in civilDoc.GetSiteIds())
+            var siteEntity = tr.GetObject(docSite, OpenMode.ForRead) as CivilDB.Site;
+            if (siteEntity.Name.Equals(_site))
             {
-              var siteEntity = tr.GetObject(docSite, OpenMode.ForRead) as CivilDB.Site;
-              if (siteEntity.Name.Equals(_site))
-              {
-                site = docSite;
-                break;
-              }
-            }
-          }
-        }
-
-        // get style
-        if (alignment["style"] != null)
-        {
-          var _style = alignment["style"] as string;
-          foreach (var docStyle in civilDoc.Styles.AlignmentStyles)
-          {
-            var styleEntity = tr.GetObject(docStyle, OpenMode.ForRead) as CivilDB.Styles.AlignmentStyle;
-            if (styleEntity.Name.Equals(_style))
-            {
-              style = docStyle;
+              site = docSite;
               break;
             }
           }
         }
-
-        // get labelset
-        if (alignment["label"] != null)
-        {
-          var _label = alignment["label"] as string;
-          foreach (var docLabelSet in civilDoc.Styles.LabelSetStyles.AlignmentLabelSetStyles)
-          {
-            var labelEntity = tr.GetObject(docLabelSet, OpenMode.ForRead) as CivilDB.Styles.AlignmentLabelSetStyle;
-            if (labelEntity.Name.Equals(_label))
-            {
-              label = docLabelSet;
-              break;
-            }
-          }
-        }
-
-        ObjectId alignmentId = CivilDB.Alignment.Create(civilDoc, polylineOptions, name, site, layer, style, label);
-        if (alignmentId.IsValid)
-        {
-          _alignment = tr.GetObject(alignmentId, OpenMode.ForRead) as CivilDB.Alignment;
-        }
-        else
-        {
-          polyline.Erase();
-        }
-
-        tr.Commit();
       }
 
-      return _alignment;
+      // get style
+      if (alignment["style"] != null)
+      {
+        var _style = alignment["style"] as string;
+        foreach (var docStyle in civilDoc.Styles.AlignmentStyles)
+        {
+          var styleEntity = tr.GetObject(docStyle, OpenMode.ForRead) as CivilDB.Styles.AlignmentStyle;
+          if (styleEntity.Name.Equals(_style))
+          {
+            style = docStyle;
+            break;
+          }
+        }
+      }
+
+      // get labelset
+      if (alignment["label"] != null)
+      {
+        var _label = alignment["label"] as string;
+        foreach (var docLabelSet in civilDoc.Styles.LabelSetStyles.AlignmentLabelSetStyles)
+        {
+          var labelEntity = tr.GetObject(docLabelSet, OpenMode.ForRead) as CivilDB.Styles.AlignmentLabelSetStyle;
+          if (labelEntity.Name.Equals(_label))
+          {
+            label = docLabelSet;
+            break;
+          }
+        }
+      }
+      #endregion
+
+      // create alignment entity curves
+      var entities = new CivilDB.AlignmentEntityCollection();
+      foreach (var entity in alignment.entities)
+      {
+        CivilDB.AlignmentEntity _entity = null;
+
+        // create an alignment entity based on entity type
+        string type = (entity as Base)["alignmentType"] as string;
+
+        switch (type)
+        {
+          default:
+            var entityPoly = CreatePolylineEntity(entity, out CivilDB.PolylineOptions options);
+            if (entityPoly == null)
+              continue;
+            ObjectId entityId = CivilDB.Alignment.Create(civilDoc, options, name, site, layer, style, label);
+            if (entityId.IsValid)
+              _entity = Trans.GetObject(entityId, OpenMode.ForRead) as CivilDB.Alignment;
+            else
+            {
+              entityPoly.Erase();
+              continue;
+            }
+            break;
+        }
+
+        if (_entity != null)
+          entities.AddFixedCurve(_entity);
+      }
+
+      // create connected alignment: need incoming and outgoing parent alignment ids and maybe stations
+      var p = new CivilDB.ConnectedAlignmentParams();
+      var _alignment = CivilDB.Alignment.enti
+    */
+
+      return null;
     }
 
     // profiles
