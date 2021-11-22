@@ -257,7 +257,6 @@ namespace Objects.Converter.AutocadCivil
 
     public CivilDB.Alignment AlignmentToNative(Alignment alignment)
     {
-      /*
       CivilDB.Alignment _alignment = null;
       var name = alignment.name ?? alignment.applicationId;
       var layer = Doc.Database.LayerZero;
@@ -280,7 +279,7 @@ namespace Objects.Converter.AutocadCivil
         {
           foreach (ObjectId docSite in civilDoc.GetSiteIds())
           {
-            var siteEntity = tr.GetObject(docSite, OpenMode.ForRead) as CivilDB.Site;
+            var siteEntity = Trans.GetObject(docSite, OpenMode.ForRead) as CivilDB.Site;
             if (siteEntity.Name.Equals(_site))
             {
               site = docSite;
@@ -296,7 +295,7 @@ namespace Objects.Converter.AutocadCivil
         var _style = alignment["style"] as string;
         foreach (var docStyle in civilDoc.Styles.AlignmentStyles)
         {
-          var styleEntity = tr.GetObject(docStyle, OpenMode.ForRead) as CivilDB.Styles.AlignmentStyle;
+          var styleEntity = Trans.GetObject(docStyle, OpenMode.ForRead) as CivilDB.Styles.AlignmentStyle;
           if (styleEntity.Name.Equals(_style))
           {
             style = docStyle;
@@ -311,7 +310,7 @@ namespace Objects.Converter.AutocadCivil
         var _label = alignment["label"] as string;
         foreach (var docLabelSet in civilDoc.Styles.LabelSetStyles.AlignmentLabelSetStyles)
         {
-          var labelEntity = tr.GetObject(docLabelSet, OpenMode.ForRead) as CivilDB.Styles.AlignmentLabelSetStyle;
+          var labelEntity = Trans.GetObject(docLabelSet, OpenMode.ForRead) as CivilDB.Styles.AlignmentLabelSetStyle;
           if (labelEntity.Name.Equals(_label))
           {
             label = docLabelSet;
@@ -323,6 +322,7 @@ namespace Objects.Converter.AutocadCivil
 
       // create alignment entity curves
       var entities = new CivilDB.AlignmentEntityCollection();
+      CivilDB.Alignment previousAlignment = null;
       foreach (var entity in alignment.entities)
       {
         CivilDB.AlignmentEntity _entity = null;
@@ -353,8 +353,8 @@ namespace Objects.Converter.AutocadCivil
 
       // create connected alignment: need incoming and outgoing parent alignment ids and maybe stations
       var p = new CivilDB.ConnectedAlignmentParams();
-      var _alignment = CivilDB.Alignment.enti
-    */
+      p.
+      var _alignment = CivilDB.Alignment.cre;
 
       return null;
     }
