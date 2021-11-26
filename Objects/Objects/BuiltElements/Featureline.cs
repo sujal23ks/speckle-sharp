@@ -11,7 +11,7 @@ namespace Objects.BuiltElements
   {
     public ICurve baseCurve { get; set; }
 
-    public string name { get; set; }
+    public string name { get; set; } // this is the point code in C3D
 
     public string units { get; set; }
 

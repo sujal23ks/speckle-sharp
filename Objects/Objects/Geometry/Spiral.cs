@@ -10,31 +10,27 @@ namespace Objects.Geometry
 {
   public enum SpiralType
   {
-    Arithmetic, // Archimedean
-    Euler, // clothoid, Cornu
-    Fibonacci, // golden
-    Hyperbolic,
-    Lituus,
-    Logarithmic,
-    Parabolic // Fermat's
+    Biquadratic,
+    BiquadraticParabola,
+    Bloss,
+    Clothoid,
+    Cosine,
+    Cubic,
+    CubicParabola,
+    Radioid,
+    Sinusoid,
+    Unknown
   }
 
   public class Spiral : Base, ICurve, IHasBoundingBox
   {
     public Point startPoint { get; set; }
     public Point endPoint { get; set; }
-    public double startAngle { get; set; }
-    public double endAngle { get; set; }
-    public Plane plane { get; set; }
-    public double turns { get; set; }
+    public Plane plane { get; set; } // plane with origin at spiral center
+    public double turns { get; set; } // total angle of spiral. positive is counterclockwise, negative is clockwise
     public Vector pitchAxis { get; set; } = new Vector();
-    public double angle { get; set; }
-
-    public double slope { get; set; }
-
     public double pitch { get; set; } = 0;
-
-    //public SpiralType spiralType { get; set; }
+    public SpiralType spiralType { get; set; }
 
     public Polyline displayValue { get; set; }
 

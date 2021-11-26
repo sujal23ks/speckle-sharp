@@ -7,6 +7,7 @@ using Speckle.Core.Models;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.Civil.ApplicationServices;
 using CivilDB = Autodesk.Civil.DatabaseServices;
+using Civil = Autodesk.Civil;
 using Acad = Autodesk.AutoCAD.Geometry;
 
 using Alignment = Objects.BuiltElements.Alignment;
@@ -23,6 +24,7 @@ using Pipe = Objects.BuiltElements.Pipe;
 using Plane = Objects.Geometry.Plane;
 using Polyline = Objects.Geometry.Polyline;
 using Spiral = Objects.Geometry.Spiral;
+using SpiralType = Objects.Geometry.SpiralType;
 using Station = Objects.BuiltElements.Station;
 using Structure = Objects.BuiltElements.Structure;
 using Autodesk.AutoCAD.Geometry;
@@ -92,17 +94,32 @@ namespace Objects.Converter.AutocadCivil
       _arc["endStation"] = arc.EndStation;
       return _arc;
     }
+    private SpiralType GetSpiralType(Civil.SpiralType type)
+    {
+      switch (type)
+      {
+        case Civil.SpiralType.Clothoid:
+          return SpiralType.Clothoid;
+        case Civil.SpiralType.Bloss:
+          return SpiralType.Bloss;
+        case Civil.SpiralType.BiQuadratic:
+          return SpiralType.Biquadratic;
+        case Civil.SpiralType.CubicParabola:
+          return SpiralType.CubicParabola;
+        case Civil.SpiralType.Sinusoidal:
+          return SpiralType.Sinusoid;
+        default:
+          return SpiralType.Unknown;
+      }
+    }
     private Spiral AlignmentSpiralToSpeckle(CivilDB.AlignmentSubEntitySpiral spiral, CivilDB.Alignment alignment)
     {
       var _spiral = new Spiral();
-      _spiral.slope = spiral.SPIAngle;
-      _spiral.angle = spiral.Delta;
       _spiral.startPoint = PointToSpeckle(spiral.StartPoint);
-      _spiral.startAngle = spiral.StartDirection;
       _spiral.endPoint = PointToSpeckle(spiral.EndPoint);
-      _spiral.endAngle = spiral.EndDirection;
       _spiral.length = spiral.Length;
       _spiral.pitch = 0;
+      _spiral.spiralType = GetSpiralType(spiral.SpiralDefinition);
 
       // get plane
       var vX = new Vector3d(System.Math.Cos(spiral.StartDirection) + spiral.StartPoint.X, System.Math.Sin(spiral.StartDirection) + spiral.StartPoint.Y, 0);
@@ -205,7 +222,7 @@ namespace Objects.Converter.AutocadCivil
       var poly = alignment.Spline.ToPolyline(false, true);
       _alignment.displayValue = CurveToSpeckle(poly) as Polyline;
 
-      _alignment.entities = curves;
+      _alignment.curves = curves;
       if (alignment.DisplayName != null)
         _alignment.name = alignment.DisplayName;
       if (alignment.StartingStation != null)
@@ -321,9 +338,10 @@ namespace Objects.Converter.AutocadCivil
 #endregion
 
       // create alignment entity curves
+      /*
       var entities = new CivilDB.AlignmentEntityCollection();
       CivilDB.Alignment previousAlignment = null;
-      foreach (var entity in alignment.entities)
+      foreach (var entity in alignment.curves)
       {
         CivilDB.AlignmentEntity _entity = null;
 
@@ -346,15 +364,12 @@ namespace Objects.Converter.AutocadCivil
             }
             break;
         }
-
         if (_entity != null)
           entities.AddFixedCurve(_entity);
       }
+      */
 
       // create connected alignment: need incoming and outgoing parent alignment ids and maybe stations
-      var p = new CivilDB.ConnectedAlignmentParams();
-      p.
-      var _alignment = CivilDB.Alignment.cre;
 
       return null;
     }
@@ -380,6 +395,7 @@ namespace Objects.Converter.AutocadCivil
     }
 
     // featurelines
+
     public Featureline FeatureLineToSpeckle(CivilDB.FeatureLine featureline)
     {
       var _featureline = new Featureline();
@@ -577,6 +593,7 @@ namespace Objects.Converter.AutocadCivil
 
     // corridors
     // displaymesh: mesh representation corridor solid
+    // this is composed of assemblies, alignments, and profiles, use point codes to generate featurelines (which will have the 3d curve)
     public Base CorridorToSpeckle(CivilDB.Corridor corridor)
     {
       var _corridor = new Base();

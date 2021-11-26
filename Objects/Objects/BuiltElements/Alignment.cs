@@ -9,7 +9,7 @@ namespace Objects.BuiltElements
 {
   public class Alignment : Base
   {
-    public List<ICurve> entities { get; set; }
+    public List<ICurve> curves { get; set; } // a list of line, arc, and spirals, or polycurves comprised of the 3 curve types
 
     public string name { get; set; }
 
