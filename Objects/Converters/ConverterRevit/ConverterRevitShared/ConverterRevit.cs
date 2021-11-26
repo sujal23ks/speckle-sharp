@@ -320,8 +320,8 @@ namespace Objects.Converter.Revit
 
         // non revit built elems
         case BE.Alignment o:
-          Report.Log($"Created Alignment {o.applicationId}");
-          return ModelCurveToNative(o.baseCurve);
+          Report.Log($"Created Alignment {o.applicationId} as Polyline");
+          return ModelCurveToNative(o.displayValue);
 
         case BE.Structure o:
           Report.Log($"Created Structure {o.applicationId}");

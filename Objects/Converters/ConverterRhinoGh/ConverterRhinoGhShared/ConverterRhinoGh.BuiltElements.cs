@@ -275,7 +275,7 @@ namespace Objects.Converter.RhinoGh
     public RH.Curve AlignmentToNative(Alignment alignment)
     {
       var curves = new List<RH.Curve>();
-      foreach (var entity in alignment.entities)
+      foreach (var entity in alignment.curves)
       {
         var converted = CurveToNative(entity);
         if (converted != null)

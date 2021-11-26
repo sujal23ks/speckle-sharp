@@ -46,7 +46,9 @@ namespace Objects.Converter.MicroStationOpen
       CifGM.StationFormatSettings settings = CifGM.StationFormatSettings.GetStationFormatSettingsForModel(Model);
       var stationFormatter = new CifGM.StationingFormatter(alignment);
 
-      _alignment.baseCurve = CurveToSpeckle(alignment.Element as DisplayableElement, ModelUnits);
+      // TODO: extract alignment curve segments and set to _alignment.curves prop
+      var baseCurve = CurveToSpeckle(alignment.Element as DisplayableElement, ModelUnits);
+      _alignment.curves = new List<ICurve>(){baseCurve};
 
       if (alignment.Name != null)
         _alignment.name = alignment.Name;
@@ -95,7 +97,7 @@ namespace Objects.Converter.MicroStationOpen
 
     public CifGM.Alignment AlignmentToNative(Alignment alignment)
     {
-      var baseCurve = alignment.baseCurve;
+      var baseCurve = alignment.curves.First();
       var nativeCurve = CurveToNative(baseCurve);
 
       ConsensusConnectionEdit con = ConsensusConnectionEdit.GetActive();
