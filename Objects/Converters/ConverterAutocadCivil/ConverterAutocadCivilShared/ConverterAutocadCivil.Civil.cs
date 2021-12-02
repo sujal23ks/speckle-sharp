@@ -1,4 +1,4 @@
-﻿#if (CIVIL2021 || CIVIL2022)
+﻿//#if (CIVIL2021 || CIVIL2022)
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,6 +24,7 @@ using Mesh = Objects.Geometry.Mesh;
 using Pipe = Objects.BuiltElements.Pipe;
 using Plane = Objects.Geometry.Plane;
 using Polyline = Objects.Geometry.Polyline;
+using Profile = Objects.BuiltElements.Profile;
 using Spiral = Objects.Geometry.Spiral;
 using SpiralType = Objects.Geometry.SpiralType;
 using Station = Objects.BuiltElements.Station;
@@ -33,19 +34,7 @@ namespace Objects.Converter.AutocadCivil
 {
   public partial class ConverterAutocadCivil
   {
-    // stations
-    public Station StationToSpeckle(CivilDB.Station station)
-    {
-      var _station = new Station();
-      _station.location = PointToSpeckle(station.Location);
-      _station.type = station.StationType.ToString();
-      _station.number = station.RawStation;
-      _station.units = ModelUnits;
-
-      return _station;
-    }
-
-    // alignments
+  // spirals
     public SpiralType SpiralTypeToSpeckle(Civil.SpiralType type)
     {
       switch (type)
@@ -83,13 +72,112 @@ namespace Objects.Converter.AutocadCivil
           return Civil.SpiralType.Clothoid;
       }
     }
+
+    // stations
+    public Station StationToSpeckle(CivilDB.Station station)
+    {
+      var _station = new Station();
+      _station.location = PointToSpeckle(station.Location);
+      _station.type = station.StationType.ToString();
+      _station.number = station.RawStation;
+      _station.units = ModelUnits;
+
+      return _station;
+    }
+
+    // profiles
+    public Base ProfileToSpeckle(CivilDB.Profile profile)
+    {
+      var _profile = new Profile();
+
+      // get the profile entity curves
+      List<ICurve> curves = new List<ICurve>();
+      var stations = new List<double>();
+      for (int i = 0; i < profile.Entities.Count; i++)
+      {
+        var entity = profile.Entities.GetEntityByOrder(i);
+
+        ICurve segment = null;
+        switch (entity.ProfileEntityType)
+        {
+          case CivilDB.ProfileEntityType.Circular:
+            var arc = entity as CivilDB.ProfileCircular;
+            segment = ProfileArcToSpeckle(arc);
+            break;
+          case CivilDB.ProfileEntityType.Tangent:
+            var tangent = entity as CivilDB.ProfileTangent;
+            segment = ProfileLineToSpeckle(tangent);
+            break;
+          case CivilDB.ProfileEntityType.ParabolaSymmetric:
+            var spiral = entity as CivilDB.ProfileParabolaSymmetric;
+            segment = AlignmentSpiralToSpeckle(spiral, alignment);
+            break;
+          case CivilDB.ProfileEntityType.ParabolaAsymmetric:
+            var spiral = entity as CivilDB.ProfileParabolaAsymmetric;
+            segment = AlignmentSpiralToSpeckle(spiral, alignment);
+            break;
+        }
+        if (segment != null)
+          curves.Add(segment);
+      }
+
+      // displayvalue
+      var poly = profile.BaseCurve as Autodesk.AutoCAD.DatabaseServices.Polyline;
+      using (Polyline2d poly2d = poly.ConvertTo(false))
+      {
+        _profile.displayValue = CurveToSpeckle(poly2d.Spline.ToPolyline()) as Polyline;
+      }
+
+      _profile.curves = curves;
+      _profile.name = profile.Name;
+      _profile.startStation = profile.StartingStation;
+      _profile.endStation = profile.EndingStation;
+      _profile.units = ModelUnits;
+
+      // c3d props
+      _profile["maxElevation"] = profile.ElevationMax;
+      _profile["minElevation"] = profile.ElevationMin;
+      _profile["pviStations"] = profile.PVIs.Select(o => o.Station).ToList();
+      _profile["pviElevations"] = profile.PVIs.Select(o => o.Elevation).ToList();
+      _profile["pviGradeIns"] = profile.PVIs.Select(o => o.GradeIn).ToList();
+      _profile["pviGradeOuts"] = profile.PVIs.Select(o => o.GradeOut).ToList();
+
+      if (profile.Description != null)
+        _profile["description"] = profile.Description;
+
+      return _profile;
+    }
+    private Arc ProfileArcToSpeckle(CivilDB.ProfileCircular profile)
+    {
+      var arc = new Arc() { units = ModelUnits };
+
+      arc.radius = profile.Radius;
+      var start = new Point3d(profile.StartStation, profile.StartElevation);
+      var end = new Point3d(profile.EndStation, profile.EndElevation);
+      arc.startPoint = PointToSpeckle(start);
+      arc.endPoint = PointToSpeckle(end);
+
+      return arc;
+    }
+    private Line ProfileLineToSpeckle(CivilDB.ProfileTangent profile)
+    {
+      var line = new Line() { units = ModelUnits };
+
+      var start = new Point3d(profile.StartStation, profile.StartElevation);
+      var end = new Point3d(profile.EndStation, profile.EndElevation);
+
+      line.start = PointToSpeckle(start);
+      line.end = PointToSpeckle(end);
+      line.length = profile.Length;
+    }
+
+    // alignments
     public Alignment AlignmentToSpeckle(CivilDB.Alignment alignment)
     {
       var _alignment = new Alignment();
 
       // get the alignment subentity curves
       List<ICurve> curves = new List<ICurve>();
-      var stations = new List<double>();
       for (int i = 0; i < alignment.Entities.Count; i++)
       {
         var entity = alignment.Entities.GetEntityByOrder(i);
@@ -379,26 +467,6 @@ namespace Objects.Converter.AutocadCivil
     }
                         
 #endregion
-     
-    // profiles
-    public Base ProfileToSpeckle(CivilDB.Profile profile)
-    {
-      var curve = CurveToSpeckle(profile.BaseCurve, ModelUnits) as Base;
-
-      if (profile.DisplayName != null)
-        curve["name"] = profile.DisplayName;
-      if (profile.Description != null)
-        curve["description"] = profile.Description;
-      if (profile.StartingStation != null)
-        curve["startStation"] = profile.StartingStation;
-      if (profile.EndingStation != null)
-        curve["endStation"] = profile.EndingStation;
-      curve["profileType"] = profile.ProfileType.ToString();
-      curve["offset"] = profile.Offset;
-      curve["units"] = ModelUnits;
-
-      return curve;
-    }
 
     // featurelines
     public Featureline FeatureLineToSpeckle(CivilDB.FeatureLine featureline)
